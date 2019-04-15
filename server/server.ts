@@ -27,7 +27,7 @@ interface IStat {
 		amount: number
 		transactions: number
 	}
-	customerStatistics?: {
+	customerStatistics: {
 		[name: string]: {
 			transactions: number
 			totalSent: number
@@ -120,7 +120,7 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 				.on("data", chunk => {
 					try {
 						const { time, sender, receiver, amount } = decodeFrame(chunk, frameConfig)
-						console.log(`[${time}] ${sender} -> ${receiver} (${amount})`)
+						// console.log(`[${time}] ${sender} -> ${receiver} (${amount})`)
 						stat.total.transactions++
 						stat.total.amount += amount
 						// Per day stats
@@ -158,9 +158,10 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 							stat.customerStatistics[receiver].totalReceived += amount
 						}
 					} catch (error) {
-						response.end(JSON.stringify({ error: error.name, message: error.message }))
 						console.error(error)
-						process.exit(1)
+						console.log(`Frame number: ${stat.total.transactions}`)
+						response.statusCode = 415
+						response.end(JSON.stringify({ error: "Parse error", message: error.message }))
 					}
 				})
 			break
