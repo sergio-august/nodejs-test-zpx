@@ -1,0 +1,13 @@
+{
+  "name": "nodejs-test-task-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "mrgromov <mailrxtx@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "serve": "nodemon --exec ts-node ./server/server.ts"
+  },
+  "dependencies": {
+    "@types/node": "^11.13.4"
+  }
+}

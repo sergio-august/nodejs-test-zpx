@@ -1,0 +1,88 @@
+#!/usr/bin/env node
+
+const args = parseArgs(process.argv);
+const client = require('../lib');
+
+if ((args.f && args.s && args.r && args.a && args.t) ||
+  (!args.f && !args.s && !args.r && !args.a && !args.t)) {
+  const options = {};
+  if (args.u) {
+    options.url = args.u;
+  }
+  if (args.c) {
+    options.concurrent = +args.c;
+  }
+  if (args.m) {
+    options.maxFrames = +args.m;
+  }
+  if (args.f) {
+    options.frameSize = +args.f;
+    options.offset = {
+      sender: +args.s,
+      receiver: +args.r,
+      amount: +args.a,
+      timestamp: +args.t
+    };
+  }
+
+  if (args.S) {
+    client.spam(options);
+  }
+  else {
+    client.single(options);
+  }
+}
+else {
+  usage();
+}
+
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  const out = {
+    _: []
+  };
+
+  let current = null;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg.charAt(0) === '-') {
+      let sliceIdx = 1;
+
+      if (arg.charAt(1) === '-') {
+        sliceIdx = 2;
+      }
+
+      current = arg.slice(sliceIdx);
+      out[current] = true;
+    }
+    else if (current) {
+      out[current] = arg;
+      current = null;
+    }
+    else {
+      out._ = out._.concat(arg);
+    }
+  }
+
+  return out;
+}
+
+function usage() {
+  const out = 'Usage: \n\
+  bin/client ARGS... \n\
+\n\
+  -S            Spam mode (default: false)\n\
+  -u URL        URL to use (default: http://127.0.0.1:3000/api/v1/process)\n\
+  -c NUM        Number of concurrent requests (default: 10)\n\
+  -m NUM        Maximum number of frames in a request (default: 100)\n\
+  -f NUM        Frame size (default: 74)\n\
+  -s NUM        Sender offset (default: 0)\n\
+  -r NUM        Receiver offset (default: 32)\n\
+  -a NUM        Amount offset (default: 64)\n\
+  -t NUM        Timestamp offset (default: 68)\n\
+\n\
+Note: keep in mind that you either specify size and all offsets\n\
+or don\'t specify any of those.';
+  console.log(out);
+}

@@ -1,0 +1,35 @@
+### Wrong endpoint (501 Not Implemented)
+POST http://localhost:3000/api/v1/wrong HTTP/1.1
+content-type: application/json
+
+{
+    "name": "sample"
+}
+
+### Wrong content-type (406 Not Acceptable)
+POST http://localhost:3000/api/v1/process HTTP/1.1
+content-type: application/json
+
+{
+    "name": "sample"
+}
+
+### Wrong data (415
+POST http://localhost:3000/api/v1/process HTTP/1.1
+content-type: application/octet-stream
+
+{
+    "name": "samples",
+    "time": "Mon, 15 Apr 2019 11:27:50 GMT"
+}
+
+
+### JSON RESPONSE (200 OK)
+POST http://localhost:3000/api/v1/process HTTP/1.1
+content-type: application/octet-stream
+
+{
+    "name": "samples",
+    "time": "Mon, 15 Apr 2019 11:27:50 GMT"
+}
+

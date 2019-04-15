@@ -1,0 +1,30 @@
+{
+  "name": "test-task",
+  "version": "1.0.0",
+  "description": "Test task for Node.js candidates",
+  "private": true,
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/estliberitas/test-task.git"
+  },
+  "keywords": [
+    "test",
+    "node.js",
+    "http",
+    "client"
+  ],
+  "author": {
+    "name": "Alexander Makarenko",
+    "email": "estliberitas@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/estliberitas/test-task/issues"
+  },
+  "homepage": "https://github.com/estliberitas/test-task#readme",
+  "dependencies": {}
+}

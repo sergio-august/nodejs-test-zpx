@@ -1,0 +1,1 @@
+/home/academic/Projects/sandbox/theaccessplatform/nodejs-test-task-server/client/bin/client
