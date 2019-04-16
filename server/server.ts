@@ -1,19 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from "http"
+import { Transform } from "stream"
 
 const port = 3000
-
-// Input data is a history of payment transactions. Each record has following fields:
-
-// Sender name (string, 32 bytes)
-// Receiver name (string, 32 bytes)
-// Amount in cents (4 bytes)
-// Date as timestamp in ms (6 bytes)
-
-// Note: if configuration is invalid, application should crash.
-//
-// Examples of invalid configuration:
-//  - Overlapping fields
-//  - Field offset + size exceeds frame size
 
 interface ITransaction {
 	time: number
@@ -87,6 +75,76 @@ function decodeFrame(chunk: Buffer, frameConfig: IFrameConfig): ITransaction {
 	}
 }
 
+function calculateStat(stat: IStat, data: ITransaction) {
+	const { time, sender, receiver, amount } = data
+	// console.log(`[${time}] ${sender} -> ${receiver} (${amount})`)
+	stat.total.transactions++
+	stat.total.amount += amount
+	// Per day stats
+	const day = new Date(time)
+	day.setHours(0)
+	day.setMinutes(0)
+	day.setSeconds(0)
+	day.setMilliseconds(0)
+	if (stat.customerStatistics)
+		if (stat.dayStatistics[day.getTime()] === undefined) {
+			stat.dayStatistics[day.getTime()] = { transactions: 1 }
+		} else {
+			stat.dayStatistics[day.getTime()].transactions++
+		}
+	// Per user stats
+	if (stat.customerStatistics[sender] === undefined) {
+		stat.customerStatistics[sender] = {
+			transactions: 1,
+			totalSent: amount,
+			totalReceived: 0
+		}
+	} else {
+		stat.customerStatistics[sender].transactions++
+		stat.customerStatistics[sender].totalSent += amount
+	}
+
+	if (stat.customerStatistics[receiver] === undefined) {
+		stat.customerStatistics[receiver] = {
+			transactions: 1,
+			totalSent: 0,
+			totalReceived: amount
+		}
+	} else {
+		stat.customerStatistics[receiver].transactions++
+		stat.customerStatistics[receiver].totalReceived += amount
+	}
+}
+
+class CalculateStatStream extends Transform {
+	stat: IStat
+	constructor(options: any) {
+		super(options)
+		this.stat = {
+			total: {
+				amount: 0,
+				transactions: 0
+			},
+			customerStatistics: {},
+			dayStatistics: {}
+		}
+	}
+	_transform(chunk: Buffer, enc: string, next: any) {
+		try {
+			const transaction = decodeFrame(chunk, frameConfig)
+			calculateStat(this.stat, transaction)
+			next()
+		} catch (error) {
+			next(error)
+		}
+	}
+	_flush(next: any) {
+		console.log(this.stat.total)
+		this.push(JSON.stringify(this.stat, null, "\t"))
+		next()
+	}
+}
+
 const server = createServer((request: IncomingMessage, response: ServerResponse) => {
 	switch (request.url) {
 		case "/api/v1/process": {
@@ -100,70 +158,28 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 				response.end(JSON.stringify({ error: "'content-type' should be 'application/octet-stream'" }))
 			}
 
-			const stat: IStat = {
-				total: {
-					amount: 0,
-					transactions: 0
-				},
-				customerStatistics: {},
-				dayStatistics: {}
-			}
+			const calcStream = new CalculateStatStream({ writableObjectMode: true })
+
+			calcStream
+				.on("error", error => {
+					console.error(error)
+					response.statusCode = 415
+					response.end(JSON.stringify({ error: "Parse error", message: error.message }))
+				})
 
 			request
 				.on("error", error => {
-					response.statusCode = 500
 					console.error(error)
+					response.statusCode = 415
+					response.end(JSON.stringify({ error: "Parse error", message: error.message }))
 				})
-				.on("end", () => {
-					response.end(JSON.stringify(stat, null, "\t"))
+				.on("close", () => {
+					console.log("Client request closed")
+					calcStream.end()
 				})
-				.on("data", chunk => {
-					try {
-						const { time, sender, receiver, amount } = decodeFrame(chunk, frameConfig)
-						// console.log(`[${time}] ${sender} -> ${receiver} (${amount})`)
-						stat.total.transactions++
-						stat.total.amount += amount
-						// Per day stats
-						const day = new Date(time)
-						day.setHours(0)
-						day.setMinutes(0)
-						day.setSeconds(0)
-						day.setMilliseconds(0)
-						if (stat.customerStatistics)
-							if (stat.dayStatistics[day.getTime()] === undefined) {
-								stat.dayStatistics[day.getTime()] = { transactions: 1 }
-							} else {
-								stat.dayStatistics[day.getTime()].transactions++
-							}
-						// Per user stats
-						if (stat.customerStatistics[sender] === undefined) {
-							stat.customerStatistics[sender] = {
-								transactions: 1,
-								totalSent: amount,
-								totalReceived: 0
-							}
-						} else {
-							stat.customerStatistics[sender].transactions++
-							stat.customerStatistics[sender].totalSent += amount
-						}
 
-						if (stat.customerStatistics[receiver] === undefined) {
-							stat.customerStatistics[receiver] = {
-								transactions: 1,
-								totalSent: 0,
-								totalReceived: amount
-							}
-						} else {
-							stat.customerStatistics[receiver].transactions++
-							stat.customerStatistics[receiver].totalReceived += amount
-						}
-					} catch (error) {
-						console.error(error)
-						console.log(`Frame number: ${stat.total.transactions}`)
-						response.statusCode = 415
-						response.end(JSON.stringify({ error: "Parse error", message: error.message }))
-					}
-				})
+			request.pipe(calcStream).pipe(response)
+
 			break
 		}
 
@@ -174,13 +190,13 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 	}
 })
 
-server.on("clientError", error => {
+server.on("clientError", (error, socket) => {
 	if (error) {
-		console.error(error)
-		process.exit(1)
-	} else {
-		console.log(`Server listening on port ${port}`)
+		console.error("server clientError", error)
+		socket.end("HTTP/1.1 400 Bad Request\r\n\r\n")
 	}
 })
 
-server.listen(port)
+server.listen(port, () => {
+	console.log(`Server listening on port ${port}`)
+})
