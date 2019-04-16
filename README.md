@@ -133,6 +133,13 @@ with corresponding HTTP status codes put into JSON output as well.
 
 ## Testing
 
+### Server implementation
+
+For testing please do:
+
+    yarn install
+    yarn start
+
 ### Utility for sending test content
 
 Execute `bin/client` for usage.
@@ -142,3 +149,8 @@ For testing you can use following command:
     bin/client -u http://... -f 128 -s 0 -r 40 -a 80 -t 120
 
 For stress-testing you can add `-S` option, plus play with `-c` and `-m`.
+
+### Todo
+
+- Config check
+- Load config from JSON
