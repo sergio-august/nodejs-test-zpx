@@ -5,9 +5,14 @@
   "author": "mrgromov <mailrxtx@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "serve": "nodemon --exec ts-node ./server/server.ts"
+    "build": "tsc",
+    "start": "node ./build/server.js",
+    "serve": "tsc && node ./build/server.js",
+    "watch": "nodemon --exec ts-node ./server/server.ts"
   },
-  "dependencies": {
-    "@types/node": "^11.13.4"
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^11.13.4",
+    "typescript": "^3.4.3"
   }
 }
