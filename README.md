@@ -133,9 +133,10 @@ with corresponding HTTP status codes put into JSON output as well.
 
 ## Testing
 
-### Server implementation
 
-For testing please do:
+### Server
+
+For run server please do:
 
     yarn install
     yarn start
@@ -144,15 +145,11 @@ Server runs on port 3000 by default
 
 ### Utility for sending test content
 
-Execute `bin/client` for usage.
+Execute `client/bin/client` for usage.
 
 For testing you can use following command:
 
-    client/bin/client -u http 'http://127.0.0.1:3000/api/v1/process' -m 10000
+    client/bin/client -u http://127.0.0.1:3000/api/v1/process -f 128 -s 0 -r 40 -a 80 -t 120 -m 10000 -c 1
 
 For stress-testing you can add `-S` option, plus play with `-c` and `-m`.
 
-### Todo
-
-- Config check
-- Load config from JSON
