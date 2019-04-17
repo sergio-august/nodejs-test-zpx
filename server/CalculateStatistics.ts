@@ -112,7 +112,7 @@ export default function CalculateStatistics(config: IConfig) {
 			request
 				.on("readable", () => {
 					let chunk
-					while (null !== (chunk = request.read(74))) {
+					while (null !== (chunk = request.read(config.frameSize))) {
 						try {
 							const transaction = decodeFrame(chunk, config)
 							processTransaction(stat, transaction)
