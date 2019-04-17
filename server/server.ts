@@ -2,6 +2,7 @@ import { createServer, IncomingMessage, ServerResponse } from "http"
 import CalculateStatistics from "./CalculateStatistics"
 import config from "./loadConfig"
 
+const environment = process.env.NODE_ENV || "development"
 const calculate = CalculateStatistics(config)
 
 const server = createServer((request: IncomingMessage, response: ServerResponse) => {
@@ -19,10 +20,20 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 
 			calculate(request)
 				.then(stat => {
+					console.log(`${stat.total.transactions} transactions processed`)
 					response.end(JSON.stringify(stat, null, "\t"))
 				})
 				.catch((error: Error) => {
-					console.error(error)
+					if (environment !== "development") {
+						console.error(error)
+					}
+					if (environment === "development") {
+						if (error.message === "Client request closed") {
+							console.error(error)
+						} else {
+							throw error
+						}
+					}
 					response.statusCode = 415
 					response.end(JSON.stringify({ error: "Parse error", message: error.message }))
 				})
@@ -39,8 +50,17 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 
 server.on("clientError", (error: Error, socket) => {
 	if (error) {
-		console.error("server clientError", error)
-		socket.end("HTTP/1.1 400 Bad Request\r\n\r\n")
+		if (environment === "development") {
+			if (error.message === "Parse Error") {
+				console.error(error)
+			} else {
+				throw error
+			}
+		} else {
+			console.error("server clientError")
+			console.error(error)
+			socket.end("HTTP/1.1 400 Bad Request\r\n\r\n")
+		}
 	}
 })
 
