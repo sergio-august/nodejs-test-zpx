@@ -1,5 +1,5 @@
 import { IncomingMessage } from "http"
-import { IConfig } from "./config"
+import { IConfig } from "./loadConfig"
 
 interface ITransaction {
 	time: number
@@ -35,18 +35,18 @@ function decodeFrame(chunk: Buffer, config: IConfig): ITransaction {
 		return str
 	}
 
-	if (chunk.length !== config.frameSize) {
+	const { frameSize, offset, dataSize } = config
+	if (chunk.length !== frameSize) {
 		throw new Error(
 			"Failed to parse frame: frame size is incorrect: " +
-				`expected ${config.frameSize}, but got ${chunk.length}`
+				`expected ${frameSize}, but got ${chunk.length}`
 		)
 	}
-	const { offset } = config
 	try {
-		const sender = trimNullRight(chunk.toString("utf8", offset.sender, offset.sender + 32).trimRight())
-		const receiver = trimNullRight(chunk.toString("utf8", offset.receiver, offset.receiver + 32).trimRight())
-		const amount = chunk.readIntBE(offset.amount, 4)
-		const time = chunk.readIntBE(offset.timestamp, 6)
+		const sender = trimNullRight(chunk.toString("utf8", offset.sender, offset.sender + dataSize.sender).trimRight())
+		const receiver = trimNullRight(chunk.toString("utf8", offset.receiver, offset.receiver + dataSize.receiver).trimRight())
+		const amount = chunk.readIntBE(offset.amount, dataSize.amount)
+		const time = chunk.readIntBE(offset.timestamp, dataSize.timestamp)
 		return { time, sender, receiver, amount }
 	} catch (error) {
 		throw new Error("Failed to parse frame: offset problem!\n" + error.message)
