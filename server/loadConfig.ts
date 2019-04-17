@@ -32,19 +32,7 @@ export interface IConfig extends INonStrictConfig {
 }
 
 const environment = process.env.NODE_ENV || "development"
-
 let config: IConfig
-// export const config: IConfig = {
-// 	serverPort: 3000,
-// 	serverHostname: "127.0.0.1",
-// 	frameSize: 74,
-// 	offset: {
-// 		sender: 0,
-// 		receiver: 32,
-// 		amount: 64,
-// 		timestamp: 68
-// 	}
-// }
 
 try {
 	config = JSON.parse(readFileSync(path.join(__dirname, "config.json"), { encoding: "utf8" }))
