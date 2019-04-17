@@ -1,0 +1,17 @@
+{
+	"serverPort": 3000,
+	"serverHostname": "127.0.0.1",
+	"frameSize": 74,
+	"offset": {
+		"sender": 0,
+		"receiver": 32,
+		"amount": 64,
+		"timestamp": 68
+	},
+	"dataSize": {
+		"sender": 32,
+		"receiver": 32,
+		"amount": 4,
+		"timestamp": 6
+	}
+}

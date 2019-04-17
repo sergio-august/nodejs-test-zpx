@@ -1,0 +1,10 @@
+{
+	"serverPort": 3000,
+	"frameSize": 128,
+	"offset": {
+		"sender": 0,
+		"receiver": 40,
+		"amount": 80,
+		"timestamp": 120
+	}
+}

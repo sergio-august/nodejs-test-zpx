@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "http"
 import CalculateStatistics from "./CalculateStatistics"
-import config from "./config"
+import config from "./loadConfig"
 
 const calculate = CalculateStatistics(config)
 
@@ -19,10 +19,9 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 
 			calculate(request)
 				.then(stat => {
-					console.log(stat.total)
 					response.end(JSON.stringify(stat, null, "\t"))
 				})
-				.catch(error => {
+				.catch((error: Error) => {
 					console.error(error)
 					response.statusCode = 415
 					response.end(JSON.stringify({ error: "Parse error", message: error.message }))
@@ -38,13 +37,13 @@ const server = createServer((request: IncomingMessage, response: ServerResponse)
 	}
 })
 
-server.on("clientError", (error, socket) => {
+server.on("clientError", (error: Error, socket) => {
 	if (error) {
 		console.error("server clientError", error)
 		socket.end("HTTP/1.1 400 Bad Request\r\n\r\n")
 	}
 })
 
-server.listen(config.serverPort, () => {
-	console.log(`Server is listening on port ${config.serverPort}`)
+server.listen(config.serverPort, config.serverHostname, () => {
+	console.log(`Server is listening on http://${config.serverHostname}:${config.serverPort}`)
 })
