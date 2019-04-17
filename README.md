@@ -148,7 +148,7 @@ Execute `bin/client` for usage.
 
 For testing you can use following command:
 
-    bin/client -u http 'http://127.0.0.1:3000/api/v1/process' -m 10000
+    client/bin/client -u http 'http://127.0.0.1:3000/api/v1/process' -m 10000
 
 For stress-testing you can add `-S` option, plus play with `-c` and `-m`.
 
